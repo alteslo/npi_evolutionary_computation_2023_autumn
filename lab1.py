@@ -1,45 +1,51 @@
 import random
 
 
-# Fitness function
-def calculate_fitness(value):
-    return value
+class Evolution:
+    def __init__(self, ) -> None:
+        pass
 
+    def initial_population(self, size, min_value, max_value):
+        """Initial population"""
+        initial_population = [random.randint(
+            min_value, max_value) for _ in range(size)]
+        return initial_population
 
-# Initial population
-def initial_population(size, min_value, max_value):
-    return [random.randint(min_value, max_value) for _ in range(size)]
+    def calculate_fitness(self, value):
+        """Fitness function"""
+        return value
 
+    def mutate(self, parent1, parent2):
+        """Mutate function"""
+        child = parent1 if random.random() < 0.5 else parent2
+        mutate = child + random.randint(-1, 1)
+        return mutate
 
-# Mutate function
-def mutate(parent1, parent2):
-    child = parent1 if random.random() < 0.5 else parent2
-    mutate = child + random.randint(-1, 1)
-    return mutate
+    def evolution(self, population, max_generation):
+        """Evolution function"""
 
-
-# Evolution function
-def evolution(population, mutate, max_generation):
-    generation = 0
-    while generation < max_generation:
-        population = sorted(population, key=calculate_fitness, reverse=True)
-        print('Generation %s: %s' % (generation, population))
-        next_generation = []
-        for _ in range(int(len(population)/2)):
-            parent1 = random.choice(population[:50])
-            parent2 = random.choice(population[:50])
-            child1 = mutate(parent1, parent2)
-            child2 = mutate(parent1, parent2)
-            next_generation += [child1, child2]
-        population = next_generation
-        generation += 1
-    return max(population, key=calculate_fitness)
+        generation = 0
+        while generation < max_generation:
+            population = sorted(population, key=self.calculate_fitness, reverse=True)
+            print(f'Generation {generation}: {population}')
+            next_generation = []
+            for _ in range(int(len(population)/2)):
+                parent1 = random.choice(population[:50])
+                parent2 = random.choice(population[:50])
+                child1 = self.mutate(parent1, parent2)
+                child2 = self.mutate(parent1, parent2)
+                next_generation += [child1, child2]
+            population = next_generation
+            generation += 1
+        print(f'Generation {generation}: {population}')
+        return max(population, key=self.calculate_fitness)
 
 
 # Driving code
-population = initial_population(10, 2, 11)
-max_value = evolution(population, mutate, 10)
-print('Max Value: %s' % max_value)
+evolution_algo = Evolution()
+population = evolution_algo.initial_population(11, 2, 11)
+max_value = evolution_algo.evolution(population, 10)
+print(f'Max Value: {max_value}')
 
 
 # В этом коде мы создаем начальную популяцию из случайных чисел, затем в
