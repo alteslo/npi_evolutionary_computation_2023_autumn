@@ -1,119 +1,96 @@
-import math
 import random
 
+# Создание графа
+graph = [[0, 2, 5, 7],
+         [2, 0, 8, 3],
+         [5, 8, 0, 1],
+         [7, 3, 1, 0]]
 
-class AntColony:
-    def __init__(self, num_ants, alpha, beta, evaporation, max_iterations) -> None:
-        self.num_ants = num_ants
+# Параметры муравьиного алгоритма
+alpha = 1  # Влияние феромонов
+beta = 2  # Влияние видимости
+evaporation = 0.5  # Скорость испарения феромона
+q = 100  # Количество феромона, оставляемое муравьем
 
-        self.alpha = alpha  # Коэффициент влияния феромона
-        self.beta = beta  # Коэффициент влияния привлекательности города
-        self.evaporation = evaporation  # Коэффициент испарения феромона
-        self.max_iterations = max_iterations  # Максимальное количество итераций
+# Количество итераций
+iterations = 10
 
-    def add_cities_to_run(self, cities):
-        self.cities = cities
-        self.num_cities = len(cities)
-        self.pheromone = [[1] * self.num_cities for _ in range(self.num_cities)]  # Коэффициент феромона
+# Количество муравьев
+ants = 5
 
-    def _distance(self, city1, city2):
-        """Функция расчета расстояния между городами"""
-        x1, y1 = self.cities[city1]
-        x2, y2 = self.cities[city2]
-        return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+# Количество вершин в графе
+num_vertices = len(graph)
 
-    def _choose_next_city(self, current_city, visited_cities):
-        """Функция выбора следующего города для перемещения муравья"""
-
-        attractiveness = []
-
-        for city in range(self.num_cities):
-            if city not in visited_cities:
-                pheromone_level = self.pheromone[current_city][city]
-                dist = self._distance(current_city, city)
-                attractiveness.append(
-                    (city, (pheromone_level ** self.alpha) * ((1 / dist) ** self.beta))
-                )
-
-        total = sum(attr[1] for attr in attractiveness)
-        probabilities = [(attr[0], attr[1] / total) for attr in attractiveness]
-
-        next_city = random.choices([city[0] for city in probabilities], [
-                                city[1] for city in probabilities])[0]
-        return next_city
-
-    def _update_pheromone(self, trails):
-        """Функция обновления феромона после завершения итерации"""
-        for i in range(self.num_cities):
-            for j in range(self.num_cities):
-                self.pheromone[i][j] *= (1 - self.evaporation)
-                for trail in trails:
-                    length = trail["length"]
-                    self.pheromone[i][j] += (1.0 / length)
-
-    def ants_run(self,):
-        """Муравьиный алгоритм"""
-
-        best_tour = None
-        best_length = float("inf")
-
-        for iteration in range(self.max_iterations):
-            ant_tours = []
-
-            for ant in range(self.num_ants):
-                visited = [0]  # Начинаем каждый тур с города 0
-                tour_length = 0.0
-
-                for _ in range(self.num_cities - 1):
-                    current_city = visited[-1]
-                    next_city = self._choose_next_city(current_city, visited)
-                    visited.append(next_city)
-                    tour_length += self._distance(current_city, next_city)
-
-                tour_length += self._distance(visited[-1], 0)  # Замыкаем тур
-
-                if tour_length < best_length:
-                    best_length = tour_length
-                    best_tour = visited
-
-                ant_tours.append({"tour": visited, "length": tour_length})
-
-            self._update_pheromone(ant_tours)
-
-        return best_tour, best_length
+# Инициализация феромонов на ребрах
+pheromone = [[1 for _ in range(num_vertices)] for _ in range(num_vertices)]
 
 
-num_cities = 5  # Количество городов
-num_ants = 10  # Количество муравьев в колонии
+# Функция выбора следующей вершины
+def select_next_vertex(current_vertex, available_vertices):
+    probabilities = []
 
-# Координаты городов
-cities = {
-    0: (2, 3),
-    1: (4, 1),
-    2: (5, 3),
-    3: (6, 6),
-    4: (8, 2)
-}
-alpha = 1.5  # Коэффициент влияния феромона
-beta = 2.5  # Коэффициент влияния привлекательности города
-evaporation = 0.1  # Коэффициент испарения феромона
-max_iterations = 100  # Максимальное количество итераций
+    # Рассчитываем вероятности перехода к доступным вершинам
+    for vertex in available_vertices:
+        pheromone_amount = pheromone[current_vertex][vertex]
+        visibility = 1 / graph[current_vertex][vertex]
+        probability = pheromone_amount ** alpha * visibility ** beta
+        probabilities.append((vertex, probability))
+
+    # Выбираем следующую вершину на основе вероятностей
+    total_probability = sum(probability for _, probability in probabilities)
+    probabilities = [
+        (vertex, probability / total_probability)
+        for vertex, probability in probabilities
+    ]
+
+    # Случайный выбор следующей вершины на основе вероятностей
+    r = random.random()
+    cumulative_probability = 0
+    for vertex, probability in probabilities:
+        cumulative_probability += probability
+        if r <= cumulative_probability:
+            return vertex
 
 
-# Запуск муравьиного алгоритма
-colony = AntColony(num_ants, alpha, beta, evaporation, max_iterations)
-colony.add_cities_to_run(cities)
-best_tour, best_length = colony.ants_run()
+# Находим оптимальный маршрут при помощи муравьиного алгоритма
+best_distance = float('inf')
+best_route = []
 
-# Печать лучшего найденного пути и его длины
-print("Best Tour:", best_tour)
-print("Best Length:", best_length)
+for _ in range(iterations):
+    for ant in range(ants):
+        current_vertex = random.randint(0, num_vertices - 1)  # Случайный выбор начальной вершины
+        unvisited_vertices = set(range(num_vertices)) - {current_vertex}
+        visited_vertices = [current_vertex]
+        distance = 0
 
+        while unvisited_vertices:
+            next_vertex = select_next_vertex(current_vertex, unvisited_vertices)
+            visited_vertices.append(next_vertex)
+            unvisited_vertices.remove(next_vertex)
+            distance += graph[current_vertex][next_vertex]
+            current_vertex = next_vertex
 
-# Это пример муравьиного алгоритма для решения задачи коммивояжера.
-# В данном примере представлены пять городов с координатами, заданное количество муравьев и другие параметры алгоритма.
-# Функция distance вычисляет расстояние между городами,
-# а функции choose_next_city и update_pheromone определяют выбор следующего города
-# и обновление феромона соответственно.
-# Алгоритм выполняется с помощью функции ant_colony_optimization, которая запускает итерации и обновляет феромон
-# на основе длин маршрутов, приобретенных муравьями. В конце выполнения алгоритма выводится лучший найденный путь и его длина.
+        distance += graph[visited_vertices[-1]][visited_vertices[0]]  # Добавляем расстояние от последней до первой вершины
+
+        # Если найден новый оптимальный маршрут, обновляем переменные
+        if distance < best_distance:
+            best_distance = distance
+            best_route = visited_vertices
+
+    # Обновление феромонов на ребрах
+    for i in range(num_vertices):
+        for j in range(num_vertices):
+            pheromone[i][j] *= evaporation  # Испарение феромона
+            if i in best_route and j in best_route:
+                pheromone[i][j] += q / best_distance  # Оставляем феромон на оптимальном маршруте
+
+# Вывод результатов
+print("Оптимальный маршрут:", best_route)
+print("Длина оптимального маршрута:", best_distance)
+
+# В этом примере рассматривается задача обхода всех вершин в полном графе
+# с положительными весами ребер. Алгоритм случайным образом выбирает начальную
+# вершину и пошагово перемещается от одной вершины к другой, выбирая следующую
+# вершину на основе влияния феромонов и видимости. После прохождения всех
+# муравьев выполняется обновление феромонов на ребрах,
+# учитывая найденное оптимальное решение.
