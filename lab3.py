@@ -10,7 +10,12 @@ class Particle:
 
 
 class PSO:
-    def __init__(self, num_particles, num_dimensions, min_bound, max_bound, fitness_function, max_iterations=100, inertia_weight=0.7298, cognitive_weight=1.49445, social_weight=1.49445):
+    def __init__(
+            self, num_particles, num_dimensions,
+            min_bound, max_bound, fitness_function,
+            max_iterations=50, inertia_weight=0.7298,
+            cognitive_weight=1.49445, social_weight=1.49445
+    ):
         self.num_particles = num_particles
         self.num_dimensions = num_dimensions
         self.min_bound = min_bound
@@ -62,8 +67,6 @@ class PSO:
                   " Best Fitness:", self.gbest_fitness)
 
         return self.gbest_position
-
-# Example usage
 
 
 def sphere_function(x):

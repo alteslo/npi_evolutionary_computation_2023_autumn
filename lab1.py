@@ -30,8 +30,8 @@ class Evolution:
             print(f'Generation {generation}: {population}')
             next_generation = []
             for _ in range(int(len(population)/2)):
-                parent1 = random.choice(population[:50])
-                parent2 = random.choice(population[:50])
+                parent1 = random.choice(population[:10])
+                parent2 = random.choice(population[:10])
                 child1 = self.mutate(parent1, parent2)
                 child2 = self.mutate(parent1, parent2)
                 next_generation += [child1, child2]
@@ -43,8 +43,8 @@ class Evolution:
 
 # Driving code
 evolution_algo = Evolution()
-population = evolution_algo.initial_population(11, 2, 11)
-max_value = evolution_algo.evolution(population, 10)
+population = evolution_algo.initial_population(20, 2, 20)
+max_value = evolution_algo.evolution(population, 50)
 print(f'Max Value: {max_value}')
 
 
